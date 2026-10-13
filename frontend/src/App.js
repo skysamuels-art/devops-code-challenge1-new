@@ -1,29 +1,33 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import config from './config';
 
 function App() {
-  const [successMessage, setSuccessMessage] = useState() 
-  const [failureMessage, setFailureMessage] = useState() 
+  const [successMessage, setSuccessMessage] = useState('');
+  const [failureMessage, setFailureMessage] = useState('');
 
   useEffect(() => {
-    const getId = async () => {
+    const getMessage = async () => {
       try {
         const resp = await fetch(config.backendUrl);
-        setSuccessMessage((await resp.json()).message)
+
+        if (!resp.ok) {
+          throw new Error(`Backend returned HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        setSuccessMessage(data.message);
+      } catch (e) {
+        setFailureMessage(e.message);
       }
-      catch(e) {
-        setFailureMessage(e.message)
-      }
-    }
-    getId()
-  })
+    };
+
+    getMessage();
+  }, []);
 
   return (
     <div className="App">
-      {!failureMessage && !successMessage ? 'Fetching...' : null}
-      {failureMessage ? failureMessage : null}
-      {successMessage ? successMessage : null}
+      {failureMessage || successMessage || 'Fetching...'}
     </div>
   );
 }

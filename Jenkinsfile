@@ -10,9 +10,9 @@ pipeline {
         BACKEND_REPO = '060255765406.dkr.ecr.us-west-1.amazonaws.com/devops-challenge-backend'
 
         // Replace these three values with your actual ECS names.
-        ECS_CLUSTER = 'your-ecs-cluster-name'
-        FRONTEND_SERVICE = 'your-frontend-service-name'
-        BACKEND_SERVICE = 'your-backend-service-name'
+        ECS_CLUSTER = 'devops-challenge-cluster'
+        FRONTEND_SERVICE = 'devops-challenge-frontend-service'
+        BACKEND_SERVICE = 'devops-challenge-backend-service'
     }
 
     stages {

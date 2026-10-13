@@ -1,3 +1,3 @@
 module.exports = {
-    CORS_ORIGIN: 'http://localhost:3000'
-}
+CORS_ORIGIN: 'devops-challenge-alb-600040517.us-west-1.elb.amazonaws.com'
+};

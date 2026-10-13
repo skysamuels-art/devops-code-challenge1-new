@@ -2,12 +2,17 @@ pipeline {
     agent any
 
     environment {
-        // ====> Replace with your AWS region, e.g., 'us-east-1'
         AWS_REGION = 'us-west-1'
 
-        // ====> Replace with your own ECR repository URIs
+        ECR_REGISTRY = '060255765406.dkr.ecr.us-west-1.amazonaws.com'
+
         FRONTEND_REPO = '060255765406.dkr.ecr.us-west-1.amazonaws.com/devops-challenge-frontend'
-        BACKEND_REPO  = '060255765406.dkr.ecr.us-west-1.amazonaws.com/devops-challenge-backend'
+        BACKEND_REPO = '060255765406.dkr.ecr.us-west-1.amazonaws.com/devops-challenge-backend'
+
+        // Replace these three values with your actual ECS names.
+        ECS_CLUSTER = 'your-ecs-cluster-name'
+        FRONTEND_SERVICE = 'your-frontend-service-name'
+        BACKEND_SERVICE = 'your-backend-service-name'
     }
 
     stages {
@@ -19,50 +24,47 @@ pipeline {
 
         stage('Build Docker images') {
             steps {
-                script {
-                    sh 'docker build -t frontend:latest ./frontend'
-                    sh 'docker build -t backend:latest ./backend'
-                }
+                sh 'docker build -t frontend:latest ./frontend'
+                sh 'docker build -t backend:latest ./backend'
             }
         }
 
         stage('Authenticate to ECR') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'your-aws-credentials-id']]) {
-                    script {
-                        sh '''
-                            aws --version
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $FRONTEND_REPO
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $BACKEND_REPO
-                        '''
-                    }
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'Jenkins Integration2'
+                ]]) {
+                    sh '''
+                        aws --version
+                        aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+                    '''
                 }
             }
         }
 
         stage('Tag and Push images to ECR') {
             steps {
-                script {
-                    sh '''
-                        docker tag frontend:latest $FRONTEND_REPO:latest
-                        docker tag backend:latest $BACKEND_REPO:latest
+                sh '''
+                    docker tag frontend:latest "$FRONTEND_REPO:latest"
+                    docker tag backend:latest "$BACKEND_REPO:latest"
 
-                        docker push $FRONTEND_REPO:latest
-                        docker push $BACKEND_REPO:latest
-                    '''
-                }
+                    docker push "$FRONTEND_REPO:latest"
+                    docker push "$BACKEND_REPO:latest"
+                '''
             }
         }
 
         stage('Update ECS services') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'your-aws-credentials-id']]) {
-                    script {
-                        sh '''
-                            aws ecs update-service --cluster your-ecs-cluster-name --service your-frontend-service-name --force-new-deployment --region $AWS_REGION
-                            aws ecs update-service --cluster your-ecs-cluster-name --service your-backend-service-name --force-new-deployment --region $AWS_REGION
-                        '''
-                    }
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'Jenkins Integration2'
+                ]]) {
+                    sh '''
+                        aws ecs update-service --cluster "$ECS_CLUSTER" --service "$FRONTEND_SERVICE" --force-new-deployment --region "$AWS_REGION"
+                        aws ecs update-service --cluster "$ECS_CLUSTER" --service "$BACKEND_SERVICE" --force-new-deployment --region "$AWS_REGION"
+                    '''
                 }
             }
         }

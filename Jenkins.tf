@@ -18,7 +18,7 @@ data "aws_ami" "amazon_linux_2023" {
 resource "aws_instance" "jenkins_master" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = "t3.small"
-  key_name      = "skz"
+  key_name      = "tech-1"
 
   vpc_security_group_ids = [aws_security_group.jenkins.id]
   subnet_id              = aws_subnet.public[0].id
